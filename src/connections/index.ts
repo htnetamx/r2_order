@@ -37,16 +37,6 @@ export class DataBaseConnections {
       });
       connect_results = await Promise.all(promises);
   
-      /*
-          //Syncro Connection
-          //Define Connection Order
-          var indexes=[];
-          indexes.push(this.connections.map(c=>c.type).indexOf(ConnectionType.MySQL2));
-          indexes.push(this.connections.map(c=>c.type).indexOf(ConnectionType.Mongoose));
-          
-          connect_results.push(await this.connections[indexes[0]].connect());
-          connect_results.push(await this.connections[indexes[1]].connect());
-          */
   
       return this.connections;
     }
@@ -60,18 +50,6 @@ export class DataBaseConnections {
         promises.push(connection.disconnect());
       });
       connect_results = await Promise.all(promises);
-      /*
-          //Syncro Disconnection
-          //Define Disconnection Order
-          var indexes=[];
-          indexes.push(this.connections.map(c=>c.type).indexOf(ConnectionType.MySQL2));
-          indexes.push(this.connections.map(c=>c.type).indexOf(ConnectionType.Mongoose));
-  
-          connect_results.push(await this.connections[indexes[0]].disconnect());
-          connect_results.push(await this.connections[indexes[1]].disconnect());
-          
-          */
-  
       return this.connections;
     }
   }

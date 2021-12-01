@@ -10,19 +10,6 @@ import {
   
   dotenv.config()
   
-  
-  const setMongoose = {
-    input: {
-      username: process.env.DATABASE_MONGODB_USER || '',
-      password: process.env.DATABASE_MONGODB_PASSWORD || '',
-      host: process.env.DATABASE_MONGODB_HOST || 'localhostes',
-      port: process.env.DATABASE_MONGODB_PORT || 27017,
-      database: process.env.DATABASE_MONGODB_NAME || 'r2_security',
-    },
-    options: {
-      serverSelectionTimeoutMS: 5000,
-    },
-  };
   const setMySQL2 = {
     input: {
       username: process.env.DATABASE_MYSQL_USER || 'root',

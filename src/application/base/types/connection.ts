@@ -1,12 +1,11 @@
 export enum ConnectionType {
-  Mongoose = "Mongoose",
-  MySQL2 = "MySQL2",
+  MySQL2 = 'MySQL2',
 }
 
 export enum ConnectionStatus {
-  Up = "Up",
-  Down = "Down",
-  Error = "Error",
+  Up = 'Up',
+  Down = 'Down',
+  Error = 'Error',
 }
 
 export interface IConnection<I, O, C> {
