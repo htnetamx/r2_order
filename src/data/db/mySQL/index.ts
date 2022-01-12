@@ -61,8 +61,13 @@ export class RepositoryMySQL implements IOrderRepository {
         sql: `SELECT * from netamx.Store where Id=${params.storeId};`,
       });
 
-      const customer = Object.values(JSON.parse(JSON.stringify(results)));
-      const store = Object.values(JSON.parse(JSON.stringify(results)));
+      const customer = Object.values(JSON.parse(JSON.stringify(results2)));
+      const store = Object.values(JSON.parse(JSON.stringify(results3)));
+
+      console.log(customer);
+      console.log(store);
+
+      var addressId = moment((customer[0] as any).BillingAddress_Id, 'DD-MM-YYYY');
 
       var startDate = moment((customer[0] as any).CreatedOnUtc, 'DD-MM-YYYY');
       var endDate = moment((store[0] as any).CreatedOnUtc, 'DD-MM-YYYY'); 
@@ -78,13 +83,13 @@ export class RepositoryMySQL implements IOrderRepository {
         params.discountCoupon = "BUEN_FIN_NETA_10";
       }
 
-      var [results3, fields3] = await Connection.mySQL2Pool.query({
-        sql: `SELECT * from netamx.Store where Id=${params.discountCoupon};`,
-      });
-      const discountApplied = Object.values(JSON.parse(JSON.stringify(results3)));
-      if((discountApplied[0] as any).length > 0) {
-        params.discountCoupon = "";
-      }
+      // var [results4, fields4] = await Connection.mySQL2Pool.query({
+      //   sql: `SELECT * from netamx.Store where Id=${params.discountCoupon};`,
+      // });
+      // const discountApplied = Object.values(JSON.parse(JSON.stringify(results4)));
+      // if((discountApplied[0] as any).length > 0) {
+      //   params.discountCoupon = "";
+      // }
 
       var uuid = require('uuid');
       var orderGuid = uuid.v4();
@@ -105,7 +110,7 @@ export class RepositoryMySQL implements IOrderRepository {
 
       var orderToSave = {
         customOrderNumber: '',
-        billingAddressId: params.addressId,
+        billingAddressId: addressId,
         customerId: params.customerId,
         pickupAddressId: null,
         shippingAddressId: null,
@@ -177,14 +182,20 @@ export class RepositoryMySQL implements IOrderRepository {
         const orderId = (data[0] as any).insertId;
         console.log(orderId);
 
-        var items = params.items.map((item) => {
+        var items = params.items.map(async (item) => {
+
+          var [results5, fields5] = await conn.query({
+            sql: `SELECT * from netamx.Product where Id=${item.id};`,
+          });
+          const dataProd = Object.values(JSON.parse(JSON.stringify(results5)));
+        
           return {
             orderId: orderId,
             productId: item.id,
             orderItemGuid: uuid.v4(),
             quantity: item.quantity,
-            unitPriceInclTax: item.price,
-            unitPriceExclTax: item.price,
+            unitPriceInclTax: (dataProd[0] as any).Price,
+            unitPriceExclTax: (dataProd[0] as any).Price,
             priceInclTax: item.price * item.quantity,
             priceExclTax: item.price * item.quantity,
             discountAmountInclTax: 0,
@@ -222,14 +233,14 @@ export class RepositoryMySQL implements IOrderRepository {
       }
       catch (e) {
         conn.rollback();
-        return null;
+        throw (e);
       }
       finally {
         conn.release();
       }
     } catch (error) {
       console.log(error);
-      return null;
+      throw (error);
     }
   }
 

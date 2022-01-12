@@ -67,8 +67,11 @@ class RepositoryMySQL {
                 var [results3, fields3] = yield connection_1.Connection.mySQL2Pool.query({
                     sql: `SELECT * from netamx.Store where Id=${params.storeId};`,
                 });
-                const customer = Object.values(JSON.parse(JSON.stringify(results)));
-                const store = Object.values(JSON.parse(JSON.stringify(results)));
+                const customer = Object.values(JSON.parse(JSON.stringify(results2)));
+                const store = Object.values(JSON.parse(JSON.stringify(results3)));
+                console.log(customer);
+                console.log(store);
+                var addressId = (0, moment_1.default)(customer[0].BillingAddress_Id, 'DD-MM-YYYY');
                 var startDate = (0, moment_1.default)(customer[0].CreatedOnUtc, 'DD-MM-YYYY');
                 var endDate = (0, moment_1.default)(store[0].CreatedOnUtc, 'DD-MM-YYYY');
                 var dayDiff = endDate.diff(startDate, 'days');
@@ -82,13 +85,13 @@ class RepositoryMySQL {
                 else {
                     params.discountCoupon = "BUEN_FIN_NETA_10";
                 }
-                var [results3, fields3] = yield connection_1.Connection.mySQL2Pool.query({
-                    sql: `SELECT * from netamx.Store where Id=${params.discountCoupon};`,
-                });
-                const discountApplied = Object.values(JSON.parse(JSON.stringify(results3)));
-                if (discountApplied[0].length > 0) {
-                    params.discountCoupon = "";
-                }
+                // var [results4, fields4] = await Connection.mySQL2Pool.query({
+                //   sql: `SELECT * from netamx.Store where Id=${params.discountCoupon};`,
+                // });
+                // const discountApplied = Object.values(JSON.parse(JSON.stringify(results4)));
+                // if((discountApplied[0] as any).length > 0) {
+                //   params.discountCoupon = "";
+                // }
                 var uuid = require('uuid');
                 var orderGuid = uuid.v4();
                 const subTotal = params.items.reduce((acc, item) => { return acc + (item.quantity * item.price); }, 0);
@@ -104,7 +107,7 @@ class RepositoryMySQL {
                 }
                 var orderToSave = {
                     customOrderNumber: '',
-                    billingAddressId: params.addressId,
+                    billingAddressId: addressId,
                     customerId: params.customerId,
                     pickupAddressId: null,
                     shippingAddressId: null,
@@ -171,14 +174,18 @@ class RepositoryMySQL {
                     const data = Object.values(JSON.parse(JSON.stringify(results)));
                     const orderId = data[0].insertId;
                     console.log(orderId);
-                    var items = params.items.map((item) => {
+                    var items = params.items.map((item) => __awaiter(this, void 0, void 0, function* () {
+                        var [results5, fields5] = yield conn.query({
+                            sql: `SELECT * from netamx.Product where Id=${item.id};`,
+                        });
+                        const dataProd = Object.values(JSON.parse(JSON.stringify(results5)));
                         return {
                             orderId: orderId,
                             productId: item.id,
                             orderItemGuid: uuid.v4(),
                             quantity: item.quantity,
-                            unitPriceInclTax: item.price,
-                            unitPriceExclTax: item.price,
+                            unitPriceInclTax: dataProd[0].Price,
+                            unitPriceExclTax: dataProd[0].Price,
                             priceInclTax: item.price * item.quantity,
                             priceExclTax: item.price * item.quantity,
                             discountAmountInclTax: 0,
@@ -193,7 +200,7 @@ class RepositoryMySQL {
                             rentalEndDateUtc: null,
                             typeStatusOrderItemId: null
                         };
-                    });
+                    }));
                     for (var item in items) {
                         sqlQryParam = '?,'.repeat(Object.values(items[item]).length).slice(0, -1);
                         [results, fields] = yield conn.execute({
@@ -212,7 +219,7 @@ class RepositoryMySQL {
                 }
                 catch (e) {
                     conn.rollback();
-                    return null;
+                    throw (e);
                 }
                 finally {
                     conn.release();
@@ -220,7 +227,7 @@ class RepositoryMySQL {
             }
             catch (error) {
                 console.log(error);
-                return null;
+                throw (error);
             }
         });
     }
